@@ -1,0 +1,20 @@
+Date: 2011-05-05
+By: Anette Luther Christensen
+
+Function: rr1
+TimePeak is stated as date of the year in the format dd/mm. 
+Nicer plot in terms of x and y axes.
+
+
+Function: rr2
+TimePeak is stated as date of the year in the format dd/mm.
+The option period is added, allowing not only daily or monthly counts, e.g weekly counts are accepted. Consquently the option daily is omitted.
+The option offz is added, allowing to specify an offset in the glm call. 
+Nicer plot in terms of x and y axes.
+
+
+Function: rr3
+TimePeak is stated as date of the year in the format dd/mm.
+The option period is added, allowing not only daily or monthly counts, e.g weekly counts are accepted. Consquently the option daily is omitted.
+The option offz is added, allowing to specify an offset in the glm call. 
+Nicer plot in terms of x and y axes.

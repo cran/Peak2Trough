@@ -5,25 +5,34 @@
 
 \description{Estimates the peak-to-trough ratio of a seasonal component, which may be interpreted as a relative risk with the trough as a reference group. The estimator is derived by Brookhart and Rothman (2008).}
 \usage{
-rr1(counts, plot=TRUE)
+rr1(counts, plot=TRUE, hemisphere=c("Northern","Southern"),
+x.axis=c("Months","Seasons"), y.range=NULL)
 }
 
 \arguments{
   \item{counts}{a vector of observered (aggregated) monthly counts. This vector must contain 12 observations.}
   \item{plot}{logical; if TRUE a plot of the observed counts is made with the seasonal variation curve superimposed as well as the peak time.}
+  \item{hemisphere}{character indicating whether data origins from the
+  Northern (default) or Southern hemisphere. In case of Southern and
+  plot=TRUE the seasonal variation curve is shifted six months.}
+  \item{x.axis}{character indicating if the x axis should be divided
+  into months or seasons. In case of x.axis="Season" the x axis starts
+  with winter, defined as December to February in the Northern
+  hemisphere and as June to August in the Sourthern hemisphere.}
+  \item{y.range}{a vector giving the range of the y axis in the plot.}
 }
 \details{
 The observed counts, \eqn{n_1,\ldots,n_{12}}{n_1,\ldots,n_12}, are modelled according to the model given by
 
 \deqn{n_i = \frac{N}{12}  [1+\alpha\cos(\theta_i-\theta^*)],}{n_i = N/12 * [1+\alphacos(\theta_i-\theta*)],}
-for \eqn{i=1,\ldots,12}{i=1,\ldots,12}, where \eqn{N=\sum n_i}, \eqn{0 <= \alpha < 1} is the amplitude, \eqn{\theta_i=\frac{2\pi i}{12}}{\theta_i=2\pi i/12} and \eqn{\theta^*\in [0,2\pi]}{0 <= \theta* <= 2\pi}  indicates the time point with highest count. 
+for \eqn{i=1,\ldots,12}{i=1,\ldots,12}, where \eqn{N=\sum n_i}, \eqn{0 <= \alpha < 1} is the amplitude, \eqn{\theta_i=\frac{2\pi i}{12}}{\theta_i=2\pi i/12} and \eqn{\theta^*\in [0,2\pi]}{0 <= \theta* <= 2\pi}  indicates the time point with highest count.
 
 The amplitude, \eqn{\alpha}, is estimated by
 
-\deqn{\hat{\alpha} = 2\sqrt{ \frac{D^212^2-Nf}{N(N-1)} },}{\alpha = 2\sqrt (D^2*12^2-N*f)/(N(N-1)) ,} 
-where 
+\deqn{\hat{\alpha} = 2\sqrt{ \frac{D^212^2-Nf}{N(N-1)} },}{\alpha = 2\sqrt (D^2*12^2-N*f)/(N(N-1)) ,}
+where
 \deqn{D=\sqrt{ (12^{-1} \sum n_i\cos(\theta_i))^2 + (12^{-1} \sum n_i\sin(\theta_i))^2 }}{D=\sqrt{ (1/12 \sum n_i\cos(\theta_i))^2 + (1/12 \sum n_i\sin(\theta_i))^2 }}
-and 
+and
 \deqn{f = \frac{D^212^2/N}{1+D^212^2/N},}{f = (D^2*12^2/N)/(1+D^2*12^2/N),}
 the latter being a correction term to ensure valid values of the amplitude.
 
@@ -34,7 +43,9 @@ The relative risk, \eqn{RR}, estimated by the peak-to-trough ratio, is then esti
 
 }
 \value{
+  \item{Data}{Input counts}
   \item{RelativeRisk}{The estimated peak-to-trough ratio}
+  \item{RiskDif}{The estimated peak-to-trough difference}
   \item{PeakTime}{The estimated peak time}
 }
 \references{
@@ -48,7 +59,7 @@ A. L. Christensen, S. Lundbye-Christensen and C. Dethlefsen. Poisson regression 
 Anette Luther Christensen
 }
 \note{
-The code is developed in relation to and used in the manuscript: 
+The code is developed in relation to and used in the manuscript:
 
 A. L. Christensen, S. Lundbye-Christensen and C. Dethlefsen. Poisson regression models outperform the geometrical model in estimating the peak-to-trough ratio of seasonal variation: a simulation study. Submitted, 2011.
 }

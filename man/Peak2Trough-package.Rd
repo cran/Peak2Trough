@@ -12,8 +12,8 @@ Estimation of the peak-to-trough ratio of a seasonal variation component, using 
 \tabular{ll}{
 Package: \tab Peak2Trough\cr
 Type: \tab Package\cr
-Version: \tab 1.0\cr
-Date: \tab 2011-04-28\cr
+Version: \tab 1.1\cr
+Date: \tab 2011-05-03\cr
 License: \tab GPL (>= 2) \cr
 }
 This package is developed and used for the Monte Carlo simulation study in the paper: A. L. Christensen, S. Lundbye-Christensen and C. Dethlefsen. Poisson regression models outperform the geometrical model in estimating the peak-to-trough ratio of seasonal variation: a simulation study. Submitted, 2011. It holds seven functions: three estimators and four simulation schemes.}
