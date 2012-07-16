@@ -60,13 +60,24 @@ function (counts, plot = TRUE, hemisphere=c("Northern","Southern"), x.axis=c("Mo
       }
   }
 
+## Calculating residuals
+fit.y <- sum(counts)/12 * (1 + alpha * cos(1:12 * 2*pi/12 - thetamax))
+res <- counts - fit.y
 
-    cat("------------------------------- \n")
-    cat("Relative risk   = \t",  formatC(rr,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Risk difference = \t",  formatC(rd,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Peaktime        =\t", formatC(format(as.Date(365/12*Month, origin="1960-01-01"),"%d/%m"),format="s", flag=" ",width=6) , "\n")
-    cat("------------------------------- \n")
+Model <- list(y = counts, residuals = res)
 
-    list(Data=counts, RelativeRisk = rr, RiskDif=rd, TimePeak = format(as.Date(365/12*Month, origin="1960-01-01"),"%d/%m"))
+    
+    end <- list(Model=Model, RelativeRisk = rr, RiskDif=rd, TimePeak = format(as.Date(365/12*Month, origin="1960-01-01"),"%d/%m"))
+    class(end) <- "rr"
+    end
+}
+
+print.rr <- function(rr, ...){
+cat("------------------------------ \n")
+    cat("Relative risk   = \t",  formatC(rr$RelativeRisk,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=5) , "\n" )
+    cat("Risk difference = \t",  formatC(rr$RiskDif,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=5) , "\n" )
+    cat("Peaktime        = \t", rr$TimePeak , "\n")
+    cat("------------------------------ \n")
+
 }
 

@@ -8,13 +8,14 @@ Estimating peak-to-trough ratio of a seasonal variation component modelled by Po
 Estimates the peak-to-trough ratio of a seasonal component, which may be interpreted as a relative risk with the trough as a reference group. The estimator is derived from a Poisson regression model with a seasonal variation component and a secular trend in the linear predictor.
 }
 \usage{
-rr3(counts, period=365, offz=NULL, plot=TRUE, origin="1960-01-01",
+rr3(counts, dates, period=365, offz=NULL, plot=TRUE, origin="1960-01-01",
 hemisphere=c("Northern","Southern"), x.axis=c("Months","Seasons"),
 y.range=list(NULL,NULL,NULL))
 }
 
 \arguments{
   \item{counts}{a vector of observered counts. This vector may contain daily or monthly observations from at least one year.}
+  \item{dates}{integers providing the dates for which counts are observed.}
   \item{period}{integer stating the resolution of the year. Default is 365 indicating daily observations. Alternatives may be monthly (period=12) or weekly (period=529 observations.}
   \item{offz}{a vector of offsets for the glm call. Default is NULL.}
   \item{plot}{logical; if TRUE (default) a three plots are made. The first of the observed counts with the linear predictor superimposed. The second of the exponentiated secular trend and the third of the detrended seasonal variation as well as the peak time.}
@@ -83,7 +84,7 @@ Bt <- matrix(c(20,0.005),ncol=1)
 
 counts <- model4(RR=1.2,years=2,Xs=Xs,Bs=Bs,Xt=Xt,Bt=Bt,num.dta=1,sample.size=5000)$sim.data[[1]]
 
-rr3(counts)
+rr3(counts, dates=dato)
 }
 \keyword{ Seasonal variation }
 \keyword{ Poisson regression }

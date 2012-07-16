@@ -1,17 +1,21 @@
 rr3 <-
-function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", hemisphere=c("Northern","Southern"), x.axis=c("Months","Seasons"), y.range=list(NULL,NULL,NULL))
+function (counts, dates, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", hemisphere=c("Northern","Southern"), x.axis=c("Months","Seasons"), y.range=list(NULL,NULL,NULL))
 {
     k <- period
-    angles <- (1:length(counts)) * 2 * pi/k
     if(length(offz)==0) { offz <- rep(1,length(counts)) }
-    temp.model <- glm(counts ~ rcs(c(1:length(counts)), 5) +
-        cos(angles) + sin(angles) + cos(angles * 2) + sin(angles *
-        2) + cos(angles * 3) + sin(angles * 3) + cos(angles *
-        4) + sin(angles * 4), x = TRUE, family = poisson(), offset=log(offz))
+
+    temp.model <- glm(counts ~ rcs(dates, 5) +
+                               cos(2*pi*dates/k) + sin(2*pi*dates/k) + 
+                               cos(2*pi*dates/k * 2) + sin(2*pi*dates/k * 2) + 
+                               cos(2*pi*dates/k * 3) + sin(2*pi*dates/k * 3) +  
+                               cos(2*pi*dates/k * 4) + sin(2*pi*dates/k * 4), 
+                      x = TRUE, family = poisson(), offset=offz)
+
     g <- exp(temp.model$x[, c(6:13)] %*% matrix(temp.model$coefficients)[c(6:13)])[1:k]
     rr <- max(g)/min(g)
     rd <- max(g)-min(g)
-    month <- c(1:k)[g == max(g)]
+    month.max <- c(1:k)[g == max(g)]
+    month.min <- c(1:k)[g == min(g)]
     if (plot) {
       if (hemisphere=="Northern") {
           ## Northern hemisphere ###
@@ -34,7 +38,7 @@ function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", h
               axis(1,cumsum(rep(k/12,13))-k/12,c(month.abb,""))
               axis(2)
               box()
-              points(y = max((g - 1) * 100), x = month, pch = 19, col = "red")
+              points(y = max((g - 1) * 100), x = month.max, pch = 19, col = "red")
           } else {
               lii <- c(li[(k-round(k/12)+1):k],li[1:(k-round(k/12))])
               plot(y = lii, x = 1:k,  xlab = "", ylab = "Count", lwd=3, type="l", main="Exponentiated seasonal variation", ylim=c(y.range[[3]][1],y.range[[3]][2]), axes=FALSE)
@@ -70,7 +74,7 @@ function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", h
             axis(1,cumsum(rep(k/12,13))-k/12, c(month.abb[7:12], month.abb[1:6],""))
             axis(2)
             box()
-            points(y = max(li), x = (month-(k/12*6))%%k, pch = 19 , col="red")
+            points(y = max(li), x = (month.max-(k/12*6))%%k, pch = 19 , col="red")
         } else {
             li <-  c(li[(floor(k/12*6)):k],li[1:(floor(k/12*6)-1)])
             lii <- c(li[(k-round(k/12)+1):k],li[1:(k-round(k/12))])
@@ -83,11 +87,7 @@ function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", h
     }
   }
 
-    cat("------------------------------- \n")
-    cat("Relative risk   = \t",  formatC(rr,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Risk difference = \t",  formatC(rd,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Peaktime        =\t", formatC(format(as.Date(365/k*month, origin="1960-01-01"),"%d/%m"),format="s", flag=" ",width=6) , "\n")
-    cat("------------------------------- \n")
-
-    list(Model=temp.model, RelativeRisk = rr, RiskDif=rd, TimePeak = format(as.Date(365/k*month, origin="1960-01-01"),"%d/%m"))
+    end <- list(Model=temp.model, RelativeRisk = rr, RiskDif=rd, TimePeak = format(as.Date(365/k*month.max, origin="1960-01-01"),"%d/%m"), Troughtime = formatC(format(as.Date(365/k*month.min, origin="1960-01-01"),"%d/%m"),format="s", flag=" ",width=6))
+    class(end) <- "rr"
+    end
 }

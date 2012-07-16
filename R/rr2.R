@@ -1,5 +1,5 @@
-rr2 <-
-function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", hemisphere=c("Northern","Southern"), x.axis=c("Months","Seasons"), y.range=list(NULL,NULL))
+"rr2" <-
+function(counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", hemisphere=c("Northern","Southern"), x.axis=c("Months","Seasons"), y.range=list(NULL,NULL))
 {
     k <- period
     angles <- (1:length(counts)) * 2 * pi/k
@@ -69,12 +69,10 @@ function (counts, period = 365, offz = NULL, plot = TRUE, origin="1960-01-01", h
     }
   }
 
-    cat("------------------------------- \n")
-    cat("Relative risk   = \t",  formatC(rr,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Risk difference = \t",  formatC(rd,format="f", digits = 2, drop0trailing=FALSE,flag="#",width=6) , "\n" )
-    cat("Peaktime        =\t", formatC(format(as.Date(365/k*month, origin="1960-01-01"),"%d/%m"),format="s", flag=" ",width=6) , "\n")
-    cat("------------------------------- \n")
-
-    list(Model=temp.model, RelativeRisk = rr, RiskDif=rd,  TimePeak = format(as.Date(365/k*month, origin="1960-01-01"),"%d/%m"))
+    names(rr) <- "RR"
+    names(rd) <- "RD"
+    end <- list(Model=temp.model, RR = rr, RD=rd,  TimePeak = format(as.Date(365/k*month, origin="1960-01-01"),"%d/%m"))
+    class(end) <- "rr"
+    end
 }
 
