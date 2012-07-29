@@ -20,43 +20,39 @@ phi <- x2phi(par, ...) #transforming hyper parametervector to be defined on R^17
 #updating covariance matrix of the state model 
 try(# necessary in case of invalid hyper parametervectors -> numerical instability in nlm()
 m3kfas$Q[,,1] <- as.matrix(nearPD(phi2W(phi, ...) )$mat)
-#.sidste <<- -logLik(m3kfas, nsim=nsim), silent = TRUE)
-#-logLik(m3kfas, nsim=nsim)
 , silent=TRUE)
-if(class(.Last.value)=="try-error"){ return(m3kfas$loglik) } #when invalid hyper parametervectors log likelihood value assigned to last valid value, hence totally flat likelihood function (consequences not investigated)
+if(class(.Last.value)=="try-error"){ return(m3kfas$loglik) } 
 m3kfas$loglik <- -logLik(m3kfas, nsim=nsim)
-#assign(".sidste", -logLik(m3kfas, nsim=nsim), envir=.GlobalEnv)
 return(m3kfas$loglik)
 }
 
 likfstat <- function(par, nsim, ...){
-par <- c(par,rep(0,2*ss$S))
+par <- c(par, length(ss$phi)-(ss$T*(ss$T+1)/2))
 phi <- x2phi(par, ...) #transforming hyper parametervector to be defined on R^17
 #updating covariance matrix of the state model 
 try(# necessary in case of invalid hyper parametervectors -> numerical instability in nlm()
-m3kfas$Q[,,1] <- as.matrix(nearPD(phi2W(phi, ...) )$mat), silent=TRUE)
+m3kfas$Q[1:ss$T,1:ss$T,1] <- as.matrix(nearPD(phi2W(phi, ...)[1:ss$T,1:ss$T] )$mat), silent=TRUE)
 if(class(.Last.value)=="try-error"){ return(m3kfas$loglik) } 
-#.sidste <<- -logLik(m3kfas, nsim=nsim), silent = TRUE)
-#assign(".sidste", -logLik(m3kfas, nsim=nsim), envir=.GlobalEnv)
-#-logLik(m3kfas, nsim=nsim)
 m3kfas$loglik <- -logLik(m3kfas, nsim=nsim)
-#when invalid hyper parametervectors log likelihood value assigned to last valid value, hence totally flat likelihood function (consequences not investigated)
 return(m3kfas$loglik)
 }
 
 # obtaining estimate of hyper parametervector using nlm()
 if(!dynamic){
 start <- phi2x(ss$phi, ...)[1:(ss$T*(ss$T+1)/2)]
-time.nlm <- system.time(fit1 <- nlm(p=start, f=likfstat, nsim=200, gradtol=1e-12, print.level=0,  ...))
-fit1$estimate <- c(fit1$estimate, rep(0,2*ss$S))
-}else{
-start <- phi2x(ss$phi, ...)
-time.nlm <- system.time(fit1 <- nlm(p=start, f=likf, nsim=200, gradtol=1e-12, print.level=0, ...))
-}
-
+time.nlm <- system.time(fit1 <- nlm(p=start, f=likfstat, typsize=abs(start), nsim=200, steptol=min(abs(start)), stepmax=max(abs(start)), ...))
+fit1$estimate <- c(fit1$estimate, rep(0,length(ss$phi)-(ss$T*(ss$T+1)/2)))
 m4kfas <- m3kfas
 # udpdating Q
-m4kfas$Q[,,1] <- as.matrix(nearPD(phi2W(x2phi(fit1$estimate, ...), ...))$mat)
+m4kfas$Q[1:ss$T, 1:ss$T, 1] <- phi2W(x2phi(fit1$estimate, ...), ...)[1:ss$T, 1:ss$T]
+}else{
+start <- phi2x(ss$phi, ...)
+time.nlm <- system.time(fit1 <- nlm(p=start, f=likf, nsim=200, typsize=abs(start), steptol=min(abs(start)), stepmax=max(abs(start)), ...))
+m4kfas <- m3kfas
+# udpdating Q
+m4kfas$Q[,,1] <- phi2W(x2phi(fit1$estimate, ...), ...)
+}
+
 # calculates approximating Gaussian model
 out <- KFAS::approxSSM(m4kfas)
 
@@ -81,9 +77,9 @@ outg <- KFAS::KFS(m5kfas, smoothing="state")
       for(j in 1:ss$n){
           ss$C[[j]] <- outg$V[,,j]
       }
-ss$phi <- x2phi(fit1$estimate, ...)
+if(dynamic){ss$phi <- x2phi(fit1$estimate, ...)}else{ss$phi <- c(x2phi(fit1$estimate, ...)[1:(ss$T*(ss$T+1)/2)], rep(0,length(ss$phi)-(ss$T*(ss$T+1)/2)))}
 ss$Wmat <- function(tt, x, phi) phi2W(ss$phi, ...)
-ss$loglik <- -fit1$minimum
+ss$loglik <- logLik(m5kfas, nsim=200)
 options(warn=0)
 list(ss=ss, nlm.fit=fit1)
 }

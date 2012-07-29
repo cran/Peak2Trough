@@ -28,8 +28,6 @@ rrStatic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, epsi
 	Vmat(m2)  <- function(tt, x, phi){ matrix(V,nrow=1,ncol=1) }
 	Wmat(m2)  <- function(tt, x, phi){ H%*%phi2W(m2$ss$phi, T, S)%*%t(H) }
 	Fmat(m2)  <- function(tt, x, phi){ t(x$x[tt,]%*%solve(H)) }
-	m2$ss$S   <- S
-	m2$ss$T   <- T
 	
 	cat("Applies the EM algorithm ... \n")
 
@@ -43,18 +41,22 @@ rrStatic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, epsi
 	Wmat(m3)  <- function(tt, x, phi){ phi2W(phi, T, S) }
 	m0(m3)    <- matrix(solve(H)%*%t(smooth.bottom(em.out2$ss)$m0), nrow=1)
 	C0(m3)    <- solve(H)%*%(smooth.bottom(em.out2$ss)$C0)%*%solve(t(H))
+	m3$ss$S   <- S
+	m3$ss$T   <- T
+
+    kfass <- sspir::Fkfs(m3$ss, tvar=c(m3$ss$n, 1, 1, 1), offset=risktime/offset)
+    em.out2$loglik <- m3$ss$loglik <- logLik(kfass$kfas, nsim=200) 
 
 	em.model  <- list(ss=m3$ss, fit=list(time=time.em, iterations=em.out2$iterations, convergence=em.out2$convergence, loglik=tail(em.out2$loglik, n=1), estimate=m3$ss$phi))
 
-	cat("Applies the nlm routine ... \n")
+	cat("Applies the stat::nlm routine ... \n")
 	# kører nlm() på m3 -> m4
 	time.nlm  <- system.time(
 		m4<- est.phi(m3$ss, offset=risktime/offset, dynamic=FALSE, S=S, T=T, ...)
 	)
 
-	
 
-	nlm.model <- list(ss=m4$ss, fit=list(time=time.nlm, iterations=m4$nlm.fit$iterations, convergence=m4$nlm.fit$code, loglik=-m4$nlm.fit$minimum, estimate=x2phi(m4$nlm.fit$estimate, T=T, S=S)), AIC=list("K&G"=-2*(-m4$nlm.fit$minimum)+2*(T+2*S+T*(T-1)),"D&K"=(-2*(-m4$nlm.fit$minimum)+2*T*(T-1))/n) )
+	nlm.model <- list(ss=m4$ss, fit=list(time=time.nlm, iterations=m4$nlm.fit$iterations, convergence=m4$nlm.fit$code, loglik=m4$ss$loglik, estimate=m4$ss$phi), AIC=list("K&G"=-2*(m4$ss$loglik)+2*(T+2*S+length(phi)),"D&K"=(-2*(m4$ss$loglik)+2*length(phi))/n))
 
 	results    <- numeric()
 	for(i in 1:nlm.model$ss$n){
@@ -72,7 +74,7 @@ rrStatic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, epsi
 	em.model <- NULL
 	nlm.model <- m4
 	}
-	
+	cat("Finalising ... \n")
 	misc      <- list(S=S, T=T, V0=V, phi0=phi, m0=m0, C0=C0, period=period, subset=subset, data=data.frame(y=counts[subset], risktime=risktime[subset], dates=dates[subset]), offset=offset, epsilon=epsilon, max.iter=max.iter)
 
 	out <- list(em=em.model, nlm=nlm.model, misc=misc, measures=results)

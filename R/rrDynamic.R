@@ -28,8 +28,6 @@ rrDynamic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, eps
 	Vmat(m2)   <- function(tt, x, phi){ matrix(V,nrow=1,ncol=1) }
 	Wmat(m2)   <- function(tt, x, phi){ H%*%phi2W(m2$ss$phi, T, S)%*%t(H) }
 	Fmat(m2)   <- function(tt, x, phi){ t(x$x[tt,]%*%solve(H)) }
-	m2$ss$S    <- S
-	m2$ss$T    <- T
 	
 	cat("Applies the EM algorithm ... \n")
 
@@ -43,8 +41,13 @@ rrDynamic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, eps
 	Wmat(m3)   <- function(tt, x, phi){ phi2W(phi, T, S) }
 	m0(m3)     <- matrix(solve(H)%*%t(smooth.bottom(em.out2$ss)$m0), nrow=1)
 	C0(m3)     <- solve(H)%*%(smooth.bottom(em.out2$ss)$C0)%*%solve(t(H))
+	m3$ss$S    <- S
+	m3$ss$T    <- T
 
-	em.model   <- list(ss=m3$ss, fit=list(time=time.em, iterations=em.out2$iterations, convergence=em.out2$convergence, loglik=tail(em.out2$loglik, n=1), estimate=m3$phi))
+    kfass <- sspir::Fkfs(m3$ss, tvar=c(m3$ss$n, 1, 1, 1), offset=risktime/offset)
+    em.out2$loglik <- m3$ss$loglik <- logLik(kfass$kfas, nsim=200)
+
+	em.model   <- list(ss=m3$ss, fit=list(time=time.em, iterations=em.out2$iterations, convergence=em.out2$convergence, loglik=tail(em.out2$loglik, n=1), estimate=m3$ss$phi))
 
 	cat("Applies the stat::nlm routine ... \n")
 
@@ -55,7 +58,7 @@ rrDynamic <- function(counts, risktime, offset=1, dates, phi, max.iter=1000, eps
 
 	
 	
-	nlm.model  <- list(ss=m4$ss, fit=list(time=time.nlm, iterations=m4$nlm.fit$iterations, convergence=m4$nlm.fit$code, loglik=-m4$nlm.fit$minimum, estimate=x2phi(m4$nlm.fit$estimate, T=T, S=S)), AIC=list("K&G"=-2*(-m4$nlm.fit$minimum)+2*(T+2*S+length(phi)),"D&K"=(-2*(-m4$nlm.fit$minimum)+2*length(phi))/n))
+	nlm.model  <- list(ss=m4$ss, fit=list(time=time.nlm, iterations=m4$nlm.fit$iterations, convergence=m4$nlm.fit$code, loglik=m4$ss$loglik, estimate=x2phi(m4$nlm.fit$estimate, T=T, S=S)), AIC=list("K&G"=-2*(m4$ss$loglik)+2*(T+2*S+length(phi)),"D&K"=(-2*(m4$ss$loglik)+2*length(phi))/n))
 
 	results    <- numeric()
 	for(i in 1:nlm.model$ss$n){
